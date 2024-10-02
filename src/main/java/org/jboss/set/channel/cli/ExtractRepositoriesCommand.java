@@ -28,8 +28,8 @@ public class ExtractRepositoriesCommand extends MavenBasedCommand {
         ChannelCoordinate coordinate = ConversionUtils.toChannelCoordinate(channelCoord);
         List<Repository> repositories = ConversionUtils.toChannelRepositoryList(repositoryUrls);
 
-        Channel channel = resolveChannel(coordinate, repositories);
-        channel.getRepositories().stream().map(Repository::getUrl).forEach(System.out::println);
+        List<Channel> channels = resolveChannel(coordinate, repositories);
+        channels.get(0).getRepositories().stream().map(Repository::getUrl).forEach(System.out::println);
 
         return CommandLine.ExitCode.OK;
     }

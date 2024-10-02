@@ -31,8 +31,8 @@ public class ExtractManifestUrlCommand extends MavenBasedCommand {
         ChannelCoordinate coordinate = ConversionUtils.toChannelCoordinate(channelCoord);
         List<Repository> repositories = ConversionUtils.toChannelRepositoryList(repositoryUrls);
 
-        Channel channel = resolveChannel(coordinate, repositories);
-        URL url = resolveManifestUrl(channel.getManifestCoordinate(), repositories);
+        List<Channel> channels = resolveChannel(coordinate, repositories);
+        URL url = resolveManifestUrl(channels.get(0).getManifestCoordinate(), repositories);
         System.out.println(url.toExternalForm());
 
         return CommandLine.ExitCode.OK;

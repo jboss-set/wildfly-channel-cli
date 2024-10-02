@@ -1,5 +1,6 @@
 package org.jboss.set.channel.cli;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -23,18 +24,20 @@ import org.wildfly.channel.maven.VersionResolverFactory;
 import org.wildfly.channel.spi.MavenVersionsResolver;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-abstract class MavenBasedCommand implements Callable<Integer> {
+public abstract class MavenBasedCommand implements Callable<Integer> {
 
     protected static final Logger logger = Logger.getLogger(MavenBasedCommand.class);
 
@@ -64,6 +67,10 @@ abstract class MavenBasedCommand implements Callable<Integer> {
         }
     }
 
+    protected ChannelManifest resolveManifest(ChannelManifestCoordinate coordinate) {
+        return resolveManifest(coordinate, Collections.emptyList());
+    }
+
     protected ChannelManifest resolveManifest(ChannelManifestCoordinate coordinate, List<Repository> repositories) {
         return ChannelManifestMapper.from(resolveManifestUrl(coordinate, repositories));
     }
@@ -77,11 +84,19 @@ abstract class MavenBasedCommand implements Callable<Integer> {
         }
     }
 
-    protected Channel resolveChannel(ChannelCoordinate coordinate, List<Repository> repositories) {
+    protected List<Channel> resolveChannel(ChannelCoordinate coordinate) {
+        return resolveChannel(coordinate, Collections.emptyList());
+    }
+
+    protected List<Channel> resolveChannel(ChannelCoordinate coordinate, List<Repository> repositories) {
         try (VersionResolverFactory resolverFactory = new VersionResolverFactory(system, systemSession)) {
             try (MavenVersionsResolver resolver = resolverFactory.create(repositories)) {
                 List<URL> urls = resolver.resolveChannelMetadata(List.of(coordinate));
-                return ChannelMapper.from(urls.get(0));
+                try (InputStream is = urls.get(0).openStream()) {
+                    return ChannelMapper.fromString(IOUtils.toString(is));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }

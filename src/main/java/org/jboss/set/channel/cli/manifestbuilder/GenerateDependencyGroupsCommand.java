@@ -16,6 +16,7 @@ import org.jboss.logging.Logger;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ public class GenerateDependencyGroupsCommand implements Callable<Integer> {
     private File[] pomFiles;
 
     @CommandLine.Option(names = {"-o", "--output-file"}, defaultValue = "-")
-    private File output;
+    private Path output;
 
     @CommandLine.Option(names = {"-e", "--equivalent"}, arity = "0..*",
             description = "prop1=prop2 pair meaning that group defined by a version property \"prop1\" should be merged into group defined by a version property \"prop2\".")
@@ -69,7 +70,8 @@ public class GenerateDependencyGroupsCommand implements Callable<Integer> {
     public Integer call() throws Exception {
         init();
 
-        Map<String, DependencyGroup> depsPerVersionProperty = new TreeMap<>();
+        Map<String, DependencyGroup> versionPropertyToDependencyGroupMap = new TreeMap<>();
+        Map<String, String> dependencyToVersionPropertyMap = new HashMap<>();
 
         for (File pomFile: pomFiles) {
             List<Project> projects = pomIO.parseProject(pomFile);
@@ -87,31 +89,59 @@ public class GenerateDependencyGroupsCommand implements Callable<Integer> {
                             artifactId = PropertyResolver.resolveInheritedProperties(session, project, artifactId);
                         }
 
+                        if (dep.getVersion() == null) {
+                            continue;
+                        }
                         if (!dep.getVersion().startsWith("${")) {
                             logger.errorf("Dependency %s:%s:%s does not use property version, group cannot be determined.",
                                     groupId, dep.getArtifactId(), dep.getVersion());
                             continue;
                         }
-
                         final String versionProperty = dep.getVersion().substring(2, dep.getVersion().length() - 1);
                         final String resolvedVersion = PropertyResolver.resolveInheritedProperties(session, project,
                                 dep.getVersion());
-                        final String bucket = equivalencyMapping.getOrDefault(versionProperty, versionProperty);
-                        DependencyGroup dependencyGroup = depsPerVersionProperty.computeIfAbsent(bucket,
-                                b -> new DependencyGroup(versionProperty));
-                        dependencyGroup.getDependencies().add(groupId + ":" + artifactId + ":" + resolvedVersion);
+                        final String groupName = equivalencyMapping.getOrDefault(versionProperty, versionProperty);
+                        final String ga = groupId + ":" + artifactId;
+
+                        if ("project.version".equals(versionProperty)) {
+                            // Ignore everything that uses project.version, it would cause conflicts when processing
+                            // more projects at once, e.g. EAP8 and XP5
+                            continue;
+                        }
+                        if (versionProperty.startsWith("legacy.")) {
+                            // Ignore legacy dependencies, we are not able to process those with wildfly-channel library
+                            // at all, as they introduce second versions of given GAs, which is not supported by the
+                            // wildfly-channel lib.
+                            continue;
+                        }
+
+                        if ("test".equals(dep.getScope())) {
+                            // Ignore test scope dependencies
+                            continue;
+                        }
+
+                        String previous = dependencyToVersionPropertyMap.putIfAbsent(ga, versionProperty);
+                        if (previous == null) {
+                            // Only add GA to dependency group the first time it's declared
+                            DependencyGroup dependencyGroup = versionPropertyToDependencyGroupMap.computeIfAbsent(groupName,
+                                    b -> new DependencyGroup(groupName));
+                            dependencyGroup.getDependencies().add(ga);
+                        } else if (!groupName.equals(previous)) {
+                            // If dependency is declared under different version properties, ignore but log warning
+                            logger.warnf("Dependency %s:%s:%s already present in group %s, will not be added to current group %s",
+                                    groupId, artifactId, resolvedVersion, previous, groupName);
+                        }
                     }
                 }
             }
         }
 
-        YAMLMapper mapper = new YAMLMapper();
-        if (output.getPath().equals("-")) {
-            System.out.println(mapper.writeValueAsString(new ArrayList<>(depsPerVersionProperty.values())));
+        if (output.toString().equals("-")) {
+            System.out.println(DependencyGroupsMapper.writeAsString(versionPropertyToDependencyGroupMap.values()));
         } else {
-            mapper.writeValue(output, new ArrayList<>(depsPerVersionProperty.values()));
+            DependencyGroupsMapper.write(versionPropertyToDependencyGroupMap.values(), output);
         }
 
-        return null;
+        return CommandLine.ExitCode.OK;
     }
 }
