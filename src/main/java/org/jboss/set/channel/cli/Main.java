@@ -6,6 +6,7 @@ import picocli.CommandLine;
 public class Main {
     public static void main(String[] args) {
         CommandLine commandLine = new CommandLine(new MainCommand());
+
         commandLine.addSubcommand(new CompareChannelsCommand());
         commandLine.addSubcommand(new FindUpgradesCommand());
         commandLine.addSubcommand(new CreateManifestFromRepoCommand());
@@ -14,6 +15,9 @@ public class Main {
         commandLine.addSubcommand(new ExtractRepositoriesCommand());
         commandLine.addSubcommand(new ExtractManifestUrlCommand());
         commandLine.addSubcommand(new GenerateDependencyGroupsCommand());
+
+        commandLine.setExecutionExceptionHandler((ex, cmdLine, parseResult) -> CommandLine.ExitCode.SOFTWARE);
+
         commandLine.execute(args);
     }
 }
