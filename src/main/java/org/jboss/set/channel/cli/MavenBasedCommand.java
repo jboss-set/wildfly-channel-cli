@@ -57,6 +57,10 @@ abstract class MavenBasedCommand implements Callable<Integer> {
         List<Repository> repositories = channels.stream()
                 .flatMap(channel -> channel.getRepositories().stream()).toList();
 
+        return resolveStreams(manifestCoordinates, repositories, resolverFactory);
+    }
+
+    protected static Set<Stream> resolveStreams(List<ChannelManifestCoordinate> manifestCoordinates, List<Repository> repositories, VersionResolverFactory resolverFactory) {
         try (MavenVersionsResolver resolver = resolverFactory.create(repositories)) {
             List<URL> resolvedBaseManifests = resolver.resolveChannelMetadata(manifestCoordinates);
             List<ChannelManifest> baseManifests = resolvedBaseManifests.stream().map(ChannelManifestMapper::from).toList();

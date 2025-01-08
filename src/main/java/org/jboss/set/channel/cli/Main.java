@@ -8,6 +8,7 @@ public class Main {
         CommandLine commandLine = new CommandLine(new MainCommand());
 
         commandLine.addSubcommand(new CompareChannelsCommand());
+        commandLine.addSubcommand(new CompareManifestsCommand());
         commandLine.addSubcommand(new FindUpgradesCommand());
         commandLine.addSubcommand(new CreateManifestFromRepoCommand());
         commandLine.addSubcommand(new CreateChannelCommand());
@@ -18,6 +19,7 @@ public class Main {
 
         commandLine.setExecutionExceptionHandler((ex, cmdLine, parseResult) -> CommandLine.ExitCode.SOFTWARE);
 
-        commandLine.execute(args);
+        int returnCode = commandLine.execute(args);
+        System.exit(returnCode);
     }
 }

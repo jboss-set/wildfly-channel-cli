@@ -47,8 +47,10 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
                         // Skip metadata files that list specific artifact files, we are just interested in versions.
                         continue;
                     }
-                    for (String version : metadata.getVersioning().getVersions()) {
-                        streams.add(new Stream(metadata.getGroupId(), metadata.getArtifactId(), version));
+                    if (metadata.getVersioning() != null) {
+                        for (String version : metadata.getVersioning().getVersions()) {
+                            streams.add(new Stream(metadata.getGroupId(), metadata.getArtifactId(), version));
+                        }
                     }
                 }
             }
