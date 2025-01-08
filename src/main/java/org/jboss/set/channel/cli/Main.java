@@ -12,12 +12,13 @@ public class Main {
         commandLine.addSubcommand(new FindUpgradesCommand());
         commandLine.addSubcommand(new CreateManifestFromRepoCommand());
         commandLine.addSubcommand(new CreateChannelCommand());
+        commandLine.addSubcommand(new UpdateChannelCommand());
         commandLine.addSubcommand(new MergeManifestsCommand());
         commandLine.addSubcommand(new ExtractRepositoriesCommand());
         commandLine.addSubcommand(new ExtractManifestUrlCommand());
         commandLine.addSubcommand(new GenerateDependencyGroupsCommand());
 
-        commandLine.setExecutionExceptionHandler((ex, cmdLine, parseResult) -> CommandLine.ExitCode.SOFTWARE);
+//        commandLine.setExecutionExceptionHandler((ex, cmdLine, parseResult) -> CommandLine.ExitCode.SOFTWARE);
 
         int returnCode = commandLine.execute(args);
         System.exit(returnCode);

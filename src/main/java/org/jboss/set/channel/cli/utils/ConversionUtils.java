@@ -5,6 +5,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.wildfly.channel.BlocklistCoordinate;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifestCoordinate;
+import org.wildfly.channel.ChannelMetadataCoordinate;
 import org.wildfly.channel.Repository;
 import org.wildfly.channel.maven.ChannelCoordinate;
 
@@ -147,6 +148,29 @@ public final class ConversionUtils {
             case "none" -> Channel.NoStreamStrategy.NONE;
             default -> throw new IllegalArgumentException("Unknown NoStreamStrategy name: " + strategyString);
         };
+    }
+
+    public static String toNoStreamStrategyString(Channel.NoStreamStrategy s) {
+        return switch (s) {
+            case LATEST -> "latest";
+            case MAVEN_LATEST -> "maven-latest";
+            case MAVEN_RELEASE -> "maven-release";
+            case NONE -> "none";
+            default -> throw new IllegalArgumentException("Unknown NoStreamStrategy value: " + s);
+        };
+    }
+
+    public static String toCoordinateString(ChannelMetadataCoordinate c) {
+        if (c == null) {
+            return null;
+        }
+        if (c.getUrl() != null) {
+            return c.getUrl().toString();
+        } else if (StringUtils.isBlank(c.getVersion())) {
+            return c.getGroupId() + ":" + c.getArtifactId();
+        } else {
+            return c.getGroupId() + ":" + c.getArtifactId() + ":" + c.getVersion();
+        }
     }
 
 }
