@@ -5,6 +5,7 @@ import org.jboss.set.channel.cli.utils.IOUtils;
 import org.wildfly.channel.BlocklistCoordinate;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelManifestCoordinate;
+import org.wildfly.channel.ChannelMapper;
 import org.wildfly.channel.Repository;
 import picocli.CommandLine;
 
@@ -16,8 +17,8 @@ import java.util.concurrent.Callable;
         description = "Creates a channel file according to given parameters.")
 public class CreateChannelCommand implements Callable<Integer> {
 
-    @CommandLine.Option(names = {"--output-file", "-o"}, defaultValue = "channel.yaml",
-            description = "Channel file to be written.")
+    @CommandLine.Option(names = {"--output-file", "-o"}, defaultValue = "",
+            description = "Channel file to be written. If not set, the channel will be send to stdout.")
     private Path outputFile;
 
     @CommandLine.Option(names = {"--name", "-n"},
@@ -55,7 +56,11 @@ public class CreateChannelCommand implements Callable<Integer> {
         Channel.NoStreamStrategy noStreamStrategy = ConversionUtils.toNoStreamStrategy(noStreamStrategyString);
 
         Channel channel = new Channel(name, description, null, repositories, manifestCoordinate, blocklistCoordinate, noStreamStrategy);
-        IOUtils.writeChannelFile(outputFile, channel);
+        if (outputFile.equals(Path.of(""))) {
+            System.out.println(ChannelMapper.toYaml(channel));
+        } else {
+            IOUtils.writeChannelFile(outputFile, channel);
+        }
 
         return CommandLine.ExitCode.OK;
     }
