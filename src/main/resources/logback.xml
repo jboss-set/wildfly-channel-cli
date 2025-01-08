@@ -26,12 +26,19 @@
     </encoder>
   </appender>
 
+  <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.err</target>
+    <encoder>
+      <pattern>%highlight(%-5level) %cyan(%logger{15}) - %msg%n</pattern>
+    </encoder>
+  </appender>
+
   <root level="INFO">
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="STDERR" />
   </root>
 
-  <logger name="org.jboss.set.mavendependencyupdater" level="DEBUG" />
   <!--
+  <logger name="org.jboss.set.mavendependencyupdater" level="DEBUG" />
   <logger name="org.apache" level="WARN" />
   <logger name="httpclient.wire" level="WARN" />
   <logger name="com.jayway.jsonpath.internal.JsonContext" level="WARN" />
