@@ -7,6 +7,8 @@ import org.wildfly.channel.maven.ChannelCoordinate;
 import picocli.CommandLine;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @CommandLine.Command(name = "extract-repositories",
@@ -22,6 +24,11 @@ public class ExtractRepositoriesCommand extends MavenBasedCommand {
             paramLabel = "URL")
     private List<String> repositoryUrls;
 
+    @CommandLine.Option(names = "--one-line",
+            defaultValue = "false",
+            description = "The output will be formatted in a single line like \"id1::url1[,...]\"")
+    private Boolean oneLine;
+
 
     @Override
     public Integer call() {
@@ -29,7 +36,13 @@ public class ExtractRepositoriesCommand extends MavenBasedCommand {
         List<Repository> repositories = ConversionUtils.toChannelRepositoryList(repositoryUrls);
 
         Channel channel = resolveChannel(coordinate, repositories);
-        channel.getRepositories().stream().map(Repository::getUrl).forEach(System.out::println);
+        Stream<Repository> stream = channel.getRepositories().stream();
+        if (oneLine) {
+            String output = stream.map(r -> r.getId() + "::" + r.getUrl()).collect(Collectors.joining(","));
+            System.out.println(output);
+        } else {
+            stream.map(Repository::getUrl).forEach(System.out::println);
+        }
 
         return CommandLine.ExitCode.OK;
     }
