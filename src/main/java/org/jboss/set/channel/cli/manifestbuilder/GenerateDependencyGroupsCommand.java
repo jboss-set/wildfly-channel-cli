@@ -96,9 +96,10 @@ public class GenerateDependencyGroupsCommand implements Callable<Integer> {
                         final String versionProperty = dep.getVersion().substring(2, dep.getVersion().length() - 1);
                         final String resolvedVersion = PropertyResolver.resolveInheritedProperties(session, project,
                                 dep.getVersion());
-                        final String bucket = equivalencyMapping.getOrDefault(versionProperty, versionProperty);
-                        DependencyGroup dependencyGroup = depsPerVersionProperty.computeIfAbsent(bucket,
-                                b -> new DependencyGroup(versionProperty));
+                        final String mappedVersionProperty = equivalencyMapping.getOrDefault(versionProperty, versionProperty);
+                        final String componentKey = componentKey(mappedVersionProperty);
+                        DependencyGroup dependencyGroup = depsPerVersionProperty.computeIfAbsent(mappedVersionProperty,
+                                b -> new DependencyGroup(componentKey));
                         dependencyGroup.getDependencies().add(groupId + ":" + artifactId + ":" + resolvedVersion);
                     }
                 }
@@ -113,5 +114,9 @@ public class GenerateDependencyGroupsCommand implements Callable<Integer> {
         }
 
         return null;
+    }
+
+    private static String componentKey(String versionProperty) {
+        return versionProperty.replaceFirst("version\\.", "");
     }
 }
