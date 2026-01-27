@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 public class CreateManifestFromRepoCommand implements Callable<Integer> {
 
     private static final String MAVEN_METADATA_XML = "maven-metadata.xml";
+    private static final String MAVEN_METADATA_XML_LOCAL = "maven-metadata-local.xml";
 
     @CommandLine.Parameters(index = "0",
             description = "Local Maven repository path to generate the manifest from.",
@@ -40,7 +41,9 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
         ArrayList<Stream> streams = new ArrayList<>();
 
         try (java.util.stream.Stream<Path> stream = Files.walk(repositoryPath)) {
-            List<Path> metadataFiles = stream.filter(p -> MAVEN_METADATA_XML.equals(p.getFileName().toString()))
+            List<Path> metadataFiles = stream.filter(
+                        p -> MAVEN_METADATA_XML.equals(p.getFileName().toString()) || MAVEN_METADATA_XML_LOCAL.equals(p.getFileName().toString())
+                    )
                     .toList();
 
             for (Path metadataPath : metadataFiles) {
@@ -61,6 +64,8 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
                     }
                 }
             }
+
+
         }
 
         ChannelManifest manifest = new ChannelManifest("generated manifest", null, null, streams);
