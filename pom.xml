@@ -8,7 +8,7 @@
 
     <name>Wildfly Channel CLI Tool</name>
     <description>CLI tool for the Wildfly Channel metadata files manipulation and report generation</description>
-    <url>https://github.com/TomasHofman/wildfly-channel-cli</url>
+    <url>https://github.com/jboss-set/wildfly-channel-cli</url>
     <developers>
         <developer>
             <name>Tomas Hofman</name>
@@ -23,19 +23,11 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/TomasHofman/wildfly-channel-cli.git</connection>
-        <developerConnection>scm:git:git@github.com:TomasHofman/wildfly-channel-cli.git</developerConnection>
-        <url>https://github.com/TomasHofman/wildfly-channel-cli</url>
+        <connection>scm:git:git://github.com/jboss-set/wildfly-channel-cli.git</connection>
+        <developerConnection>scm:git:git@github.com:jboss-set/wildfly-channel-cli.git</developerConnection>
+        <url>https://github.com/jboss-set/wildfly-channel-cli</url>
         <tag>HEAD</tag>
     </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>jboss-releases-repository</id>
-            <name>JBoss Releases Repository</name>
-            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -178,7 +170,7 @@
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <tagNameFormat>@{project.version}</tagNameFormat>
-                    <arguments>-DskipTests</arguments>
+                    <arguments>-DskipTests -Dmaven.deploy.skip=true</arguments>
                 </configuration>
             </plugin>
 
