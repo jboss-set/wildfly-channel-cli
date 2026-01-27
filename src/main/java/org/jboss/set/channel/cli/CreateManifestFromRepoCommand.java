@@ -82,11 +82,12 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
         HashSet<String> extensions = new HashSet<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             stream.iterator().forEachRemaining(file -> {
-                if (!Files.isDirectory(file)) {
-                    String filename = file.getFileName().toString();
+                String filename = file.getFileName().toString();
+                if (!Files.isDirectory(file) && !filename.endsWith("-tests.jar")) { // skip tests jars
                     int dotIndex = filename.lastIndexOf(".");
                     if (dotIndex > 0) {
-                        extensions.add(filename.substring(dotIndex + 1));
+                        String suffix = filename.substring(dotIndex + 1);
+                        extensions.add(suffix);
                     }
                 }
             });
