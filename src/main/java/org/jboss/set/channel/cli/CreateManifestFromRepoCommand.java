@@ -8,12 +8,16 @@ import org.wildfly.channel.Stream;
 import picocli.CommandLine;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "create-manifest-from-repo",
@@ -39,8 +43,8 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
             List<Path> metadataFiles = stream.filter(p -> MAVEN_METADATA_XML.equals(p.getFileName().toString()))
                     .toList();
 
-            for (Path metadataFile : metadataFiles) {
-                try (InputStream is = new FileInputStream(metadataFile.toFile())) {
+            for (Path metadataPath : metadataFiles) {
+                try (InputStream is = new FileInputStream(metadataPath.toFile())) {
                     MetadataXpp3Reader reader = new MetadataXpp3Reader();
                     Metadata metadata = reader.read(is);
                     if (metadata.getVersion() != null) {
@@ -48,7 +52,10 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
                         continue;
                     }
                     if (metadata.getVersioning() != null) {
-                        for (String version : metadata.getVersioning().getVersions()) {
+                        String version = metadata.getVersioning().getVersions().getLast();
+                        Path artifactDir = metadataPath.getParent().resolve(version);
+                        Set<String> extensions = listExtensions(artifactDir);
+                        if (extensions.contains("jar") || extensions.contains("zip")) {
                             streams.add(new Stream(metadata.getGroupId(), metadata.getArtifactId(), version));
                         }
                     }
@@ -61,5 +68,24 @@ public class CreateManifestFromRepoCommand implements Callable<Integer> {
         Files.writeString(outputFile, yaml, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 
         return CommandLine.ExitCode.OK;
+    }
+
+    /**
+     * Lists extensions of files present in the directory.
+     */
+    private Set<String> listExtensions(Path dir) throws IOException {
+        HashSet<String> extensions = new HashSet<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+            stream.iterator().forEachRemaining(file -> {
+                if (!Files.isDirectory(file)) {
+                    String filename = file.getFileName().toString();
+                    int dotIndex = filename.lastIndexOf(".");
+                    if (dotIndex > 0) {
+                        extensions.add(filename.substring(dotIndex + 1));
+                    }
+                }
+            });
+        }
+        return extensions;
     }
 }
