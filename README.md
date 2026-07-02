@@ -30,6 +30,9 @@ Commands:
   extract-repositories       Extract URLs of the channel repositories, print
                                them on stdout.
   extract-manifest-url       Extract manifest URL from given channel.
+  sort-versions              Reads version strings from stdin
+                               (whitespace-delimited) and outputs them sorted
+                               from lowest to highest.
 ```
 
 ### `find-upgrades` command

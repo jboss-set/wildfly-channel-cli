@@ -17,6 +17,8 @@ public class Main {
         commandLine.addSubcommand(new ExtractRepositoriesCommand());
         commandLine.addSubcommand(new ExtractManifestUrlCommand());
         commandLine.addSubcommand(new GenerateDependencyGroupsCommand());
+        commandLine.addSubcommand(new SortVersionsCommand());
+
 
 //        commandLine.setExecutionExceptionHandler((ex, cmdLine, parseResult) -> CommandLine.ExitCode.SOFTWARE);
 
