@@ -32,4 +32,7 @@ build/
 .vscode/
 
 ### Mac OS ###
-.DS_Store
+.tDS_Store
+
+.bob
+
