@@ -192,8 +192,11 @@ public class FindUpgradesCommand extends MavenBasedCommand {
     }
 
     private void loadBlocklist(VersionResolverFactory resolverFactory, List<Channel> channels) {
-        try (MavenVersionsResolver resolver =
-                     resolverFactory.create(ConversionUtils.toChannelRepositories(channelRepositories))) {
+        Channel.Builder builder = new Channel.Builder();
+        for (Repository repository : ConversionUtils.toChannelRepositories(channelRepositories)) {
+            builder.addRepository(repository.getId(), repository.getUrl());
+        }
+        try (MavenVersionsResolver resolver = resolverFactory.create(builder.build())) {
             if (!StringUtils.isBlank(blocklistCoordinateString)) {
                 // Blocklist coordinate was given
                 final BlocklistCoordinate coordinate = ConversionUtils.toBlocklistCoordinate(blocklistCoordinateString);
